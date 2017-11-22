@@ -8,6 +8,9 @@ var { User } = require('./models/User');
 
 var app = express();
 
+const port = process.env.PORT || 3010;
+
+
 app.use(bodyParse.json());
 
 //POST method for creating a new TODO
@@ -49,12 +52,28 @@ app.get('/todos/:id', (req, res) => {
     } else {
         res.status(400).send({});
     }
-
-
 });
 
-app.listen(3006, () => {
-    console.log('Started on port 3006');
+//DELETE method for deleting a todo by Id
+app.delete('/todos/:id', (req, res) => {
+    var id = req.params.id;
+    if (ObjectID.isValid(id)) {
+        Todo.findByIdAndRemove(id).then((todo) => {
+            if (todo == null) {
+                res.status(404).send({message:'Object was not found'});
+            } else {
+                res.send(todo);
+            }
+        }, (e) => {
+            res.status(400).send(e);
+        });
+    } else {
+        res.status(400).send({ message: 'Bad request,Invalid Id' });
+    }
+});
+
+app.listen(port, () => {
+    console.log(`Started on port ${port}`);
 });
 
 

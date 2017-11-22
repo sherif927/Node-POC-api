@@ -30,7 +30,11 @@ describe('POST /todos', () => postTests());
 //GET TEST
 describe('GET /todos', () => getTests());
 
-describe('Get /todos/id', () => { getByIdTests() });
+//GET by id TEST
+describe('GET By Id /todos/id', () => getByIdTests());
+
+//DELETE TEST
+describe('DELETE', () => deleteTests());
 
 
 //GET method actual tests
@@ -115,5 +119,44 @@ function postTests() {
                     }).catch(() => done(err));
                 }
             })
+    });
+}
+
+//DELETE method actual tests
+function deleteTests() {
+    it('Should delete an object', (done) => {
+        var id = todos[0]._id.toHexString();
+        request(app)
+            .delete(`/todos/${id}`)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body._id).toBe(id);
+            })
+            .end((err, res) => {
+                if (err) {
+                    done(err);
+                } else {
+                    Todo.findById(id).then((todo) => {
+                        expect(todo).toBe(null);
+                    }).catch((e) => done(e));
+                    done();
+                }
+            });
+    });
+
+    it('Should recieve status code 400 when supplying an invalid id', (done) => {
+        var id = '12151';
+        request(app)
+            .delete(`/todos/${id}`)
+            .expect(400)
+            .end(done);
+    });
+
+    it('Should recieve status code 404 when querying an object that does not exist', (done) => {
+        var id = new ObjectID().toHexString();
+        request(app)
+            .delete(`/todos/${id}`)
+            .expect(404)
+            .end(done);
     });
 }
