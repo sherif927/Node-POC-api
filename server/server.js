@@ -9,14 +9,13 @@ var { User } = require('./models/User');
 
 var app = express();
 
-const port = process.env.PORT || 3017;
+const port = process.env.PORT || 3000;
 
 
 app.use(bodyParse.json());
 
 //POST method for creating a new TODO
 app.post('/todos', (req, res) => {
-    //console.log(req.body);
     var todo = new Todo({
         text: req.body.text
     });
@@ -73,7 +72,7 @@ app.delete('/todos/:id', (req, res) => {
     }
 });
 
-//PUT method for updating a todo
+//PATCH method for updating a todo
 app.patch('/todos/:id', (req, res) => {
     var id = req.params.id;
     var body = _.pick(req.body, ['text', 'completed']);
@@ -99,6 +98,26 @@ app.patch('/todos/:id', (req, res) => {
         res.status(400).send({ message: 'Bad request , Invalid Identifier' });
     }
 });
+
+
+
+
+app.post('/users', (req, res) => {
+    var body = _.pick(req.body, ['email', 'password', 'tokens']);
+    var user = new User({
+        email: body.email,
+        password: body.password,
+        tokens: body.tokens
+    });
+    user.save().then((doc) => {
+        res.send(doc);
+    }, (err) => {
+        res.status(400).send(err);
+    });
+
+});
+
+
 
 
 app.listen(port, () => {

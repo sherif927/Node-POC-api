@@ -38,7 +38,7 @@ describe('GET By Id /todos/id', () => getByIdTests());
 //DELETE TEST
 describe('DELETE', () => deleteTests());
 
-//PUT TEST
+//PATCH TEST
 describe('UPDATE', () => updateTests());
 
 
