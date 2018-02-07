@@ -30,7 +30,7 @@ app.post('/todos', (req, res) => {
 //GET method for listing all todos
 app.get('/todos', (req, res) => {
     Todo.find().then((todos) => {
-        res.send({ todos });
+        res.send(todos);
     }, (e) => {
         res.status(400).send(e);
     });
@@ -42,7 +42,7 @@ app.get('/todos/:id', (req, res) => {
     if (ObjectID.isValid(id)) {
         Todo.findById(id).then((todo) => {
             if (todo == null) {
-                res.status(404).send({});
+                res.status(404).send({ message: 'Object was not found' });
             } else {
                 res.send(todo);
             }
@@ -50,7 +50,7 @@ app.get('/todos/:id', (req, res) => {
             res.status(400).send(e);
         });
     } else {
-        res.status(400).send({});
+        res.status(400).send({ message: 'Bad request,Invalid Id' });
     }
 });
 
@@ -103,18 +103,17 @@ app.patch('/todos/:id', (req, res) => {
 
 
 app.post('/users', (req, res) => {
-    var body = _.pick(req.body, ['email', 'password', 'tokens']);
-    var user = new User({
-        email: body.email,
-        password: body.password,
-        tokens: body.tokens
-    });
-    user.save().then((doc) => {
-        res.send(doc);
-    }, (err) => {
-        res.status(400).send(err);
-    });
+    var body = _.pick(req.body, ['email', 'password']);
+    var user = new User(body);
 
+    user.save().then(() => {
+        return user.generateAuthToken();
+        // res.send(doc);
+    }).then((token) => {
+        res.header('x-auth',token).send(user);
+    }).catch((err) => {
+        res.status(400).send(e);
+    });
 });
 
 
