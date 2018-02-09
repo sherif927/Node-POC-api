@@ -31,12 +31,11 @@ var UserSchema = new mongoose.Schema({
     }]
 });
 
-UserSchema.methods.toJSON = function () {
-    var user = this;
-    var obj = user.toObject();
-    return _.pick(obj, ['_id', 'email']);
 
-}
+/////////////////////////////////////////////////
+//////////////// MODEL METHODS //////////////////
+/////////////////////////////////////////////////
+
 
 UserSchema.statics.findByToken = function (token) {
     var User = this;
@@ -70,6 +69,11 @@ UserSchema.statics.findByCredentials = function (email, password) {
     });
 }
 
+
+/////////////////////////////////////////////////
+////////////// INSTANCE METHODS /////////////////
+/////////////////////////////////////////////////
+
 UserSchema.methods.generateAuthToken = function () {
     var user = this;
     var access = 'auth';
@@ -81,6 +85,28 @@ UserSchema.methods.generateAuthToken = function () {
         return token;
     });
 }
+
+
+UserSchema.methods.toJSON = function () {
+    var user = this;
+    var obj = user.toObject();
+    return _.pick(obj, ['_id', 'email']);
+
+}
+
+UserSchema.methods.removeToken = function (token) {
+    var user = this;
+    return user.update({
+        $pull: {
+            tokens: { token }
+        }
+    })
+}
+
+
+/////////////////////////////////////////////////
+////////////// PRE/POST METHODS /////////////////
+/////////////////////////////////////////////////
 
 UserSchema.pre('save', function (next) {
     var user = this;
