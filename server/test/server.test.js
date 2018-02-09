@@ -11,7 +11,7 @@ const todos = [
     },
     {
         _id: new ObjectID(),
-        text: 'First todo',
+        text: 'Second todo',
         completed: true,
         completedAt: 333333
     }
