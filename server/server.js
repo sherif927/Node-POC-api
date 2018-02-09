@@ -17,8 +17,8 @@ const port = process.env.PORT || 3000;
 app.use(bodyParse.json());
 
 //POST method for creating a new TODO
-app.post('/todos', (req, res) => {
-    var todo = new Todo({ text: req.body.text });
+app.post('/todos', authenticate, (req, res) => {
+    var todo = new Todo({ text: req.body.text, _creator: req.user._id });
     todo.save().then((doc) => {
         res.send(doc);
     }).catch((err) => {
@@ -28,19 +28,22 @@ app.post('/todos', (req, res) => {
 
 
 //GET method for listing all todos
-app.get('/todos', (req, res) => {
-    Todo.find().then((todos) => {
-        res.send([todos]);
+app.get('/todos', authenticate, (req, res) => {
+    Todo.find({ _creator: req.user._id }).then((todos) => {
+        res.send(todos);
     }).catch((e) => {
         res.status(400).send(e);
     });
 });
 
 //GET method for getting a todo by id
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', authenticate, (req, res) => {
     var id = req.params.id;
     if (ObjectID.isValid(id)) {
-        Todo.findById(id).then((todo) => {
+        Todo.findOne({
+            _id: id,
+            _creator: req.user._id
+        }).then((todo) => {
             (todo == null) ? res.status(404).send({ message: 'Object was not found' }) : res.send(todo);
         }).catch((e) => {
             res.status(400).send(e);
@@ -51,10 +54,13 @@ app.get('/todos/:id', (req, res) => {
 });
 
 //DELETE method for deleting a todo by Id
-app.delete('/todos/:id', (req, res) => {
+app.delete('/todos/:id', authenticate, (req, res) => {
     var id = req.params.id;
     if (ObjectID.isValid(id)) {
-        Todo.findByIdAndRemove(id).then((todo) => {
+        Todo.findOneAndRemove({
+            _id: id,
+            _creator: req.user._id
+        }).then((todo) => {
             (todo == null) ? res.status(404).send({ message: 'Object was not found' }) : res.send(todo);
         }).catch((e) => {
             res.status(400).send(e);
@@ -65,7 +71,7 @@ app.delete('/todos/:id', (req, res) => {
 });
 
 //PATCH method for updating a todo
-app.patch('/todos/:id', (req, res) => {
+app.patch('/todos/:id', authenticate, (req, res) => {
     var id = req.params.id;
     var body = _.pick(req.body, ['text', 'completed']);
 
@@ -77,11 +83,18 @@ app.patch('/todos/:id', (req, res) => {
             body.completedAt = null;
         }
 
-        Todo.findByIdAndUpdate(id, { $set: body }, { new: true }).then((todo) => {
-            (todo == null) ? res.status(404).send({ message: 'Object was not found' }) : res.send(todo);
-        }).catch((e) => {
-            res.status(400).send(e);
-        });
+        Todo.findOneAndUpdate({
+                _id: id,
+                _creator: req.user._id
+            },{
+                $set: body
+            },{
+                new: true
+            }).then((todo) => {
+                (todo == null) ? res.status(404).send({ message: 'Object was not found' }) : res.send(todo);
+            }).catch((e) => {
+                res.status(400).send(e);
+            });
     } else {
         res.status(400).send({ message: 'Bad request , Invalid Identifier' });
     }
@@ -116,15 +129,18 @@ app.post('/users/login', (req, res) => {
     })
 });
 
-app.delete('/users/logout',authenticate,(req,res)=>{
-    req.user.removeToken(req.token).then(()=>{
-        res.status(200).send({message:'Logout Successful'});
-    }).catch((e)=>{
+
+//LOGOUT
+app.delete('/users/logout', authenticate, (req, res) => {
+    req.user.removeToken(req.token).then(() => {
+        res.status(200).send({ message: 'Logout Successful' });
+    }).catch((e) => {
         res.status(400).send(e);
     });
 })
 
 
+//get profile
 app.get('/users/me', authenticate, (req, res) => {
     res.send(req.user);
 });
