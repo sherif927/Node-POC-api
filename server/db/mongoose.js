@@ -5,4 +5,4 @@ mongoose.connect('mongodb://localhost:27017/TodoDB', {
   useMongoClient: true,
 });
 
-module.exports = { mongoose };
+module.exports =  mongoose ;
