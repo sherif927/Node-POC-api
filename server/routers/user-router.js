@@ -11,12 +11,11 @@ router.post('/signup', async (req, res) => {
     try {
         var body = _.pick(req.body, ['email', 'password']);
         var user = new User(body);
-        console.log(body);
         await user.save();
         var token = await user.generateAuthToken();
         res.header('x-auth', token).send(user);
     } catch (e) {
-        res.status(400).send(err);
+        res.status(400).send(e);
     }
 });
 
@@ -40,8 +39,7 @@ router.delete('/logout', authenticate, async (req, res) => {
         await req.user.removeToken(req.token);
         res.status(200).send({ message: 'Logout Successful' });
     } catch (e) {
-        await req.user.removeToken(req.token);
-        res.status(200).send({ message: 'Logout Successful' });
+        res.status(400).send(e);
     }
 })
 
